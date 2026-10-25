@@ -30,3 +30,40 @@
 @media(max-width:850px){.report-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.report-intro{align-items:flex-start;flex-wrap:wrap;padding:13px}.report-intro>.button{width:100%;justify-content:center}.report-period-control{align-items:flex-start;flex-direction:column}.report-period-control>div{width:100%}.report-period-control button{flex:1}.report-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.form-row{grid-template-columns:1fr}.modal{max-height:calc(100dvh - 24px);overflow:auto}.toast{max-width:calc(100vw - 24px);white-space:normal}}
 @media(max-width:380px){.content{padding-left:10px;padding-right:10px}.topbar{padding-left:10px;padding-right:10px}.metrics-grid{grid-template-columns:1fr}.metric-card{padding:13px}.report-cards{grid-template-columns:1fr}.report-card{grid-template-columns:34px 1fr}.service-stat-pair{gap:6px}.service-stat-pair>div{min-width:0;padding:8px}.brand-type{letter-spacing:1.5px}}
+
+/* Password visibility controls */
+.password-field{position:relative;display:block;width:100%}
+.password-field>input{width:100%;padding-right:42px!important}
+.password-toggle{position:absolute;top:50%;right:5px;transform:translateY(-50%);width:30px;height:28px;display:grid;place-items:center;border:0;border-radius:5px;background:transparent;color:#7b879a}
+.password-toggle:hover{background:#f0f2f7;color:#4d5d76}
+.password-toggle:focus-visible{outline:2px solid #8998f2;outline-offset:1px}
+
+/* Application dark theme */
+.app-shell.dark-mode{--line:#2b374b;--card:#151e2c;--ink:#e6ecf5;--muted:#9aa8bc;background:#0d1422;color:#e6ecf5;color-scheme:dark}
+.app-shell.dark-mode .main-shell{background:#0d1422;color:#e6ecf5}
+.app-shell.dark-mode .topbar{background:#131c2b;border-color:#2b374b;color:#e6ecf5}
+.app-shell.dark-mode .breadcrumb strong,.app-shell.dark-mode .panel-header h2,.app-shell.dark-mode .settings-panel h2,.app-shell.dark-mode .service-panel-head h2,.app-shell.dark-mode .report-intro h2,.app-shell.dark-mode .registration-status-heading strong{color:#e6ecf5}
+.app-shell.dark-mode .breadcrumb,.app-shell.dark-mode .today,.app-shell.dark-mode .sync-status,.app-shell.dark-mode .panel-header p,.app-shell.dark-mode .report-intro p,.app-shell.dark-mode .service-panel-head p,.app-shell.dark-mode .muted-cell,.app-shell.dark-mode .registration-summary>div:first-child>small,.app-shell.dark-mode .service-overview-copy>small{color:#9aa8bc}
+.app-shell.dark-mode .panel,.app-shell.dark-mode .metric-card,.app-shell.dark-mode .team-summary,.app-shell.dark-mode .report-card,.app-shell.dark-mode .report-intro,.app-shell.dark-mode .report-period-control,.app-shell.dark-mode .period-picker,.app-shell.dark-mode .notifications,.app-shell.dark-mode .row-menu,.app-shell.dark-mode .row-menu button,.app-shell.dark-mode .subtle-select,.app-shell.dark-mode .filter-button,.app-shell.dark-mode .service-overview,.app-shell.dark-mode .service-stat-pair>div,.app-shell.dark-mode .network-stock-card,.app-shell.dark-mode .registration-status-card,.app-shell.dark-mode .modal{background:#151e2c;border-color:#2b374b;color:#e6ecf5}
+.app-shell.dark-mode .service-overview{background:#151e2c}
+.app-shell.dark-mode .modal-backdrop{background:#050912b8}
+.app-shell.dark-mode .main-shell h1,.app-shell.dark-mode .panel h2,.app-shell.dark-mode .metric-value,.app-shell.dark-mode .metric-card strong,.app-shell.dark-mode .report-card>strong,.app-shell.dark-mode .team-summary strong,.app-shell.dark-mode .category-details strong,.app-shell.dark-mode .service-overview-copy>strong,.app-shell.dark-mode .service-stat-pair strong,.app-shell.dark-mode .network-stock-info>strong,.app-shell.dark-mode .registration-summary>div:first-child>strong,.app-shell.dark-mode .registration-detail>strong{color:#e6ecf5}
+.app-shell.dark-mode .data-table th{color:#9aa8bc;border-color:#2b374b}
+.app-shell.dark-mode .data-table td{color:#dce4ef;border-color:#263348}
+.app-shell.dark-mode .data-table tbody tr:hover{background:#1a2638}
+.app-shell.dark-mode .table-scroll,.app-shell.dark-mode .table-panel,.app-shell.dark-mode .full-table-panel{background:#151e2c}
+.app-shell.dark-mode .topbar-separator{background:#2b374b}
+.app-shell.dark-mode .icon-button{color:#aebbd0}
+.app-shell.dark-mode .icon-button:hover,.app-shell.dark-mode .icon-button.selected,.app-shell.dark-mode .more-button:hover,.app-shell.dark-mode .filter-button:hover{background:#26344a;color:#e8eef8}
+.app-shell.dark-mode .topbar-avatar{background:#273653;color:#c7d2ff}
+.app-shell.dark-mode .period-picker,.app-shell.dark-mode .subtle-select,.app-shell.dark-mode .filter-button,.app-shell.dark-mode .modal-form input,.app-shell.dark-mode .modal-form select,.app-shell.dark-mode .network-stock-card input{background:#101827;border-color:#334158;color:#e5ecf6}
+.app-shell.dark-mode .modal-form input::placeholder,.app-shell.dark-mode .search-box input::placeholder{color:#78879d}
+.app-shell.dark-mode .modal-header{border-color:#2b374b}
+.app-shell.dark-mode .button-ghost{background:#1a2638;border-color:#334158;color:#d6deeb}
+.app-shell.dark-mode .button-ghost:hover{background:#25334a}
+.app-shell.dark-mode .progress-track,.app-shell.dark-mode .team-progress{background:#28364a}
+.app-shell.dark-mode .report-period-control>div{background:#101827}
+.app-shell.dark-mode .report-period-control button{color:#a9b5c7}
+.app-shell.dark-mode .report-period-control button.selected{background:#273653;color:#e1e8ff;box-shadow:none}
+.app-shell.dark-mode .registration-privacy,.app-shell.dark-mode .service-db-notice{background:#292319;border-color:#57452b;color:#e0c997}
+.app-shell.dark-mode .setup-error{background:#3a2026;color:#ffc7cd}

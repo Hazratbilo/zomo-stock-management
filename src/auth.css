@@ -2,3 +2,15 @@
 .profile-signout{width:100%;padding:7px 10px 8px 13px;margin:0 0 8px;display:flex;align-items:center;gap:9px;border:0;border-radius:7px;background:transparent;color:#aeb8ca;text-align:left;font-size:10px;transition:background .15s,color .15s}.profile-signout:hover{background:#202b40;color:#fff}.profile-signout svg{color:#929fb7}
 .auth-card.setup-card{width:min(100%,540px);max-height:calc(100vh - 36px);overflow:auto}.setup-card>p{font-size:11px;line-height:1.6;margin-bottom:15px}.setup-steps{list-style:none;padding:0;margin:0 0 15px;width:100%;display:grid;gap:10px}.setup-steps li{display:flex;align-items:flex-start;gap:10px}.setup-steps li>span{flex:0 0 23px;height:23px;border-radius:50%;background:#eef0ff;color:#5c6ed6;display:grid;place-items:center;font:700 10px Manrope,sans-serif}.setup-steps li>div{display:flex;flex-direction:column;gap:3px;padding-top:2px}.setup-steps strong{font-size:10px;color:#344157}.setup-steps small,.setup-steps a{font-size:9px;line-height:1.5;color:#7f8a9c}.setup-steps a{display:inline-flex;align-items:center;gap:3px;color:#5b6ed6;text-decoration:none}.setup-form{padding-top:14px;border-top:1px solid #eef0f5}.setup-form input{font-size:11px}.setup-form label{font-size:9px}.setup-form .auth-submit{margin-top:3px}.setup-error{padding:9px 10px;border-radius:7px;background:#fff0f0;color:#b44141;font-size:9px;line-height:1.45}.chart-empty{height:198px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:#9aa4b4;font-size:10px}.chart-empty svg{color:#99a5dd}
 
+.auth-theme-toggle{position:fixed;top:18px;right:18px;z-index:32;width:40px;height:40px;border:1px solid #e5e9f1;border-radius:11px;background:#fff;color:#59677c;box-shadow:0 8px 24px #14213a12}
+.auth-theme-toggle:hover{background:#f4f6fb}
+.app-shell.dark-mode .auth-screen{background:radial-gradient(ellipse at 50% 45%,#172238,#0b111d 72%)}
+.app-shell.dark-mode .auth-card{background:#151e2c;border-color:#2c394d;box-shadow:0 20px 56px #0005;color:#e6ecf5}
+.app-shell.dark-mode .auth-card>h1,.app-shell.dark-mode .setup-steps strong{color:#e6ecf5}
+.app-shell.dark-mode .auth-card>p,.app-shell.dark-mode .auth-kicker,.app-shell.dark-mode .setup-steps small{color:#a2aec0}
+.app-shell.dark-mode .auth-card .auth-security{border-color:#2b374b;color:#a2aec0}
+.app-shell.dark-mode .setup-form{border-color:#2b374b}
+.app-shell.dark-mode .setup-steps li>span{background:#26334d;color:#bfcaff}
+.app-shell.dark-mode .auth-theme-toggle{background:#172238;border-color:#34425a;color:#e2e9f6}
+.app-shell.dark-mode .auth-theme-toggle:hover{background:#25334b}
+
