@@ -15,8 +15,23 @@ const navGroups = [
   { label: 'MANAGEMENT', items: [ ['Settings',Settings] ] },
 ];
 const money = (n) => '₦' + Number(n).toLocaleString('en-NG');
+const htmlText = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const getLagosHour = () => Number(new Intl.DateTimeFormat('en-NG',{timeZone:'Africa/Lagos',hour:'2-digit',hourCycle:'h23'}).format(new Date()));
 const formatSale = (s, i) => ({ rawId:s.id, id:`#${String(s.id).slice(0,8).toUpperCase()}`, initials:(s.customer_name||'WC').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(), name:s.customer_name||'Walk-in customer', product:s.products?.name||'Product', amount:Number(s.total), amountPaid:Number(s.amount_paid ?? (s.status==='completed'?s.total:0)), quantity:Number(s.quantity||0), unitPrice:Number(s.unit_price||0), productCost:Number(s.products?.cost||0), status:s.status==='completed'?'Completed':s.status==='pending'?'Pending':'Cancelled', time:new Date(s.created_at).toLocaleTimeString('en-NG',{hour:'numeric',minute:'2-digit'}), createdAt:s.created_at, rep:s.profiles?.full_name||'Sales representative', repId:s.representative_id, color:['violet','amber','blue','green'][i%4] });
+
+function openPrintableReport({ title, period, preparedFor, summary, sections }) {
+  const reportWindow = window.open('', '_blank');
+  if (!reportWindow) return false;
+  const summaryHtml = summary.map(([label,value])=>`<article><span>${htmlText(label)}</span><strong>${htmlText(value)}</strong></article>`).join('');
+  const sectionsHtml = sections.map(section=>`<section><h2>${htmlText(section.title)}</h2>${section.description?`<p>${htmlText(section.description)}</p>`:''}<table><thead><tr>${section.headers.map(item=>`<th>${htmlText(item)}</th>`).join('')}</tr></thead><tbody>${section.rows.length?section.rows.map(row=>`<tr>${row.map(item=>`<td>${htmlText(item)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${section.headers.length}" class="empty">No records for this period.</td></tr>`}</tbody></table></section>`).join('');
+  reportWindow.document.open();
+  reportWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${htmlText(title)}</title><style>
+    @page{size:A4 landscape;margin:14mm}*{box-sizing:border-box}body{margin:0;color:#1b2940;font:11px Arial,sans-serif;background:#fff}.report{max-width:1180px;margin:32px auto;padding:0 24px}.masthead{display:flex;justify-content:space-between;align-items:flex-start;padding:0 0 18px;border-bottom:3px solid #596fdf}.brand{font-size:11px;letter-spacing:2px;font-weight:700;color:#596fdf}.company{font-size:10px;letter-spacing:1.1px;font-weight:700;color:#778399;margin-top:5px}.meta{text-align:right;color:#6c788c;font-size:10px;line-height:1.6}.meta strong{color:#263550}.title{margin:24px 0 4px;font-size:25px;color:#17243b}.subtitle{margin:0;color:#6f7b8e;font-size:11px}.screen-note{margin:16px 0;padding:10px 12px;background:#eff3ff;color:#4659a7;border-radius:6px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.summary article{padding:14px;border:1px solid #e7ebf2;border-radius:8px;background:#fafbfe}.summary span{display:block;color:#778399;font-size:9px;text-transform:uppercase;letter-spacing:.6px}.summary strong{display:block;margin-top:8px;font-size:18px;color:#263550}.summary-detail{margin-top:3px;color:#8a94a4;font-size:9px}section{margin:22px 0 0;break-inside:avoid}h2{margin:0 0 5px;font-size:14px;color:#263550}section>p{margin:0 0 10px;color:#778399;font-size:9px}table{width:100%;border-collapse:collapse;font-size:9px}thead{display:table-header-group}th{padding:9px 7px;text-align:left;color:#56647a;background:#f0f3f9;border-bottom:1px solid #dfe5ef;font-size:8px;letter-spacing:.35px;text-transform:uppercase}td{padding:8px 7px;border-bottom:1px solid #e9edf3;color:#344258;vertical-align:top;overflow-wrap:anywhere}tr{break-inside:avoid}.empty{text-align:center;color:#8a94a4;padding:18px}.footer{margin-top:28px;padding-top:10px;border-top:1px solid #e1e6ee;color:#8a94a4;font-size:8px;display:flex;justify-content:space-between}.screen-only{font-size:9px;color:#8a94a4}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.report{max-width:none;margin:0;padding:0}.screen-note,.screen-only{display:none}section{break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}}@media(max-width:640px){.report{margin:18px auto;padding:0 12px}.summary{grid-template-columns:repeat(2,1fr)}.masthead{gap:10px}.title{font-size:20px}}
+    </style></head><body><main class="report"><header class="masthead"><div><div class="brand">Z.</div><div class="company">ZOMO ADVANCED TECHNOLOGIES LIMITED</div></div><div class="meta"><strong>${htmlText(period)}</strong><br>Prepared for: ${htmlText(preparedFor)}<br>Generated: ${htmlText(new Intl.DateTimeFormat('en-NG',{dateStyle:'medium',timeStyle:'short',timeZone:'Africa/Lagos'}).format(new Date()))}</div></header><h1 class="title">${htmlText(title)}</h1><p class="subtitle">Confidential company report · Nigerian Naira (₦)</p><div class="screen-note">To download this report as a PDF, choose <strong>Save as PDF</strong> in the print dialog.</div><div class="summary">${summaryHtml}</div>${sectionsHtml}<footer class="footer"><span>ZOMO ADVANCED TECHNOLOGIES LIMITED · Internal business report</span><span>${htmlText(period)}</span></footer><p class="screen-only">Use your browser’s print dialog to print or save a PDF copy.</p></main></body></html>`);
+  reportWindow.document.close();
+  window.setTimeout(()=>{reportWindow.focus();reportWindow.print();},500);
+  return true;
+}
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -79,6 +94,33 @@ function App() {
   }, [client]);
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !authReady || !session?.user?.id) return undefined;
+    const idleLimit = 5 * 60 * 1000;
+    let timer;
+    let lastActivity = 0;
+    const armTimer = () => {
+      const now = Date.now();
+      if (lastActivity && now - lastActivity < 1000) return;
+      lastActivity = now;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        await client.auth.signOut({ scope: 'local' });
+        setToast('You were signed out after 5 minutes of inactivity.');
+        window.setTimeout(() => setToast(''), 5000);
+      }, idleLimit);
+    };
+    const activityEvents = ['pointerdown','pointermove','keydown','touchstart','wheel'];
+    activityEvents.forEach(event => window.addEventListener(event, armTimer, { passive: true }));
+    document.addEventListener('scroll', armTimer, true);
+    armTimer();
+    return () => {
+      window.clearTimeout(timer);
+      activityEvents.forEach(event => window.removeEventListener(event, armTimer));
+      document.removeEventListener('scroll', armTimer, true);
+    };
+  }, [authReady, client, isSupabaseConfigured, session?.user?.id]);
+
+  useEffect(() => {
     if (!isSupabaseConfigured || !authReady || !session) return;
     let cancelled = false;
     (async () => {
@@ -119,9 +161,9 @@ function App() {
   async function refreshServicePayments() {
     if (!client) return;
     const [nin, sim, payments] = await Promise.all([
-      client.from('nin_requests').select('id,customer_name,total_amount,amount_paid,status,created_at').order('created_at',{ascending:false}).limit(5000),
-      client.from('sim_registrations').select('id,customer_name,network,total_amount,amount_paid,created_at').order('created_at',{ascending:false}).limit(5000),
-      client.from('payment_transactions').select('id,record_type,record_id,amount,created_at').order('created_at',{ascending:false}).limit(5000),
+      client.from('nin_requests').select('id,representative_id,customer_name,total_amount,amount_paid,status,created_at').order('created_at',{ascending:false}).limit(5000),
+      client.from('sim_registrations').select('id,representative_id,customer_name,network,total_amount,amount_paid,created_at').order('created_at',{ascending:false}).limit(5000),
+      client.from('payment_transactions').select('id,representative_id,record_type,record_id,amount,created_at').order('created_at',{ascending:false}).limit(5000),
     ]);
     if (nin.data) setNinPayments(nin.data);
     if (sim.data) setSimPayments(sim.data);
@@ -144,13 +186,14 @@ function App() {
       start.setHours(0,0,0,0);
     }
     const inPeriod = row => new Date(row.created_at || row.createdAt) >= start && new Date(row.created_at || row.createdAt) <= now;
+    const isOwnRecord = row => userRole === 'owner' || row.representative_id === session?.user?.id || row.repId === session?.user?.id;
     return {
-      sales:sales.filter(inPeriod).filter(s=>s.status!=='Cancelled'),
-      nin:ninPayments.filter(inPeriod),
-      sim:simPayments.filter(inPeriod),
-      payments:paymentEvents.filter(inPeriod),
+      sales:sales.filter(isOwnRecord).filter(inPeriod).filter(s=>s.status!=='Cancelled'),
+      nin:ninPayments.filter(isOwnRecord).filter(inPeriod),
+      sim:simPayments.filter(isOwnRecord).filter(inPeriod),
+      payments:paymentEvents.filter(isOwnRecord).filter(inPeriod),
     };
-  }, [sales, ninPayments, simPayments, paymentEvents, reportPeriod]);
+  }, [sales, ninPayments, simPayments, paymentEvents, reportPeriod, userRole, session?.user?.id]);
   const periodProductQuantity = reportData.sales.reduce((sum,s)=>sum+s.quantity,0);
   const periodSalesValue = reportData.sales.reduce((sum,s)=>sum+s.amount,0);
   const periodProductPaid = reportData.payments.filter(payment=>payment.record_type==='sale').reduce((sum,payment)=>sum+Number(payment.amount||0),0);
@@ -259,31 +302,44 @@ function App() {
     setTeam(t=>t.filter(x=>x.id!==rep.id)); setMenuOpen(false); notify(`${rep.name} removed from the team.`);
   }
   function downloadReport() {
-    const csv = [['Product','Category','Stock','Price','Stock value'],...products.map(p=>[p.name,p.category,p.stock,p.price,p.stock*p.price])].map(row=>row.map(x=>`"${String(x).replaceAll('"','""')}"`).join(',')).join('\r\n');
-    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='zomo-inventory-report.csv';a.click();URL.revokeObjectURL(a.href);notify('Inventory report downloaded.');
+    const totalUnits = products.reduce((sum,item)=>sum+Number(item.stock||0),0);
+    const retailValue = products.reduce((sum,item)=>sum+Number(item.stock||0)*Number(item.price||0),0);
+    const purchaseValue = products.reduce((sum,item)=>sum+Number(item.stock||0)*Number(item.cost||0),0);
+    const ownerView = userRole === 'owner';
+    const headers = ownerView ? ['Product','Category','Units on hand','Selling price','Unit cost','Stock at cost','Potential sales'] : ['Product','Category','Units on hand','Selling price','Potential sales'];
+    const rows = products.map(item=>ownerView
+      ? [item.name,item.category,Number(item.stock).toLocaleString('en-NG'),money(item.price),money(item.cost||0),money(Number(item.stock)*Number(item.cost||0)),money(Number(item.stock)*Number(item.price))]
+      : [item.name,item.category,Number(item.stock).toLocaleString('en-NG'),money(item.price),money(Number(item.stock)*Number(item.price))]);
+    const summary = [['Product types',products.length.toLocaleString()],['Units on hand',totalUnits.toLocaleString('en-NG')],['Potential sales value',money(retailValue)]];
+    if(ownerView) summary.push(['Stock at purchase cost',money(purchaseValue)]);
+    const opened = openPrintableReport({title:'Inventory report',period:'Current inventory',preparedFor:accountName,summary,sections:[{title:'Product stock detail',description:'Available gadget quantities and pricing at the time this report was generated.',headers,rows}]});
+    if(!opened) notify('Allow pop-ups for this site to print or save the inventory report as a PDF.');
   }
   function downloadSalesReport() {
-    const rows=[['Type','Date','Customer','Product or service','Network','Quantity','Sale amount / fee (₦)','Money received (₦)','Money still unpaid (₦)','Status']];
     const productTotals=new Map();
+    const paymentBySale=new Map();
+    reportData.payments.filter(payment=>payment.record_type==='sale').forEach(payment=>paymentBySale.set(payment.record_id,(paymentBySale.get(payment.record_id)||0)+Number(payment.amount||0)));
     reportData.sales.forEach(s=>{
-      const paid=reportData.payments.filter(p=>p.record_type==='sale'&&p.record_id===s.rawId).reduce((n,p)=>n+Number(p.amount||0),0);
+      const paid=paymentBySale.get(s.rawId)||0;
       const item=productTotals.get(s.product)||{quantity:0,amount:0,received:0,unpaid:0};
       item.quantity+=s.quantity; item.amount+=s.amount; item.received+=paid; item.unpaid+=Math.max(0,s.amount-s.amountPaid);
       productTotals.set(s.product,item);
     });
-    rows.push(['PRODUCT TOTALS',reportPeriod,'','','','','','','','']);
-    productTotals.forEach((item,product)=>rows.push(['Product total',reportPeriod,'',product,'',item.quantity,item.amount,item.received,item.unpaid,'']));
-    rows.push(['TRANSACTIONS','','','','','','','','','']);
-    reportData.sales.forEach(s=>rows.push(['Product sale',new Date(s.createdAt).toLocaleDateString('en-NG'),s.name,s.product,'',s.quantity,s.amount,'',Math.max(0,s.amount-s.amountPaid),s.status]));
-    reportData.nin.forEach(r=>rows.push(['NIN registration',new Date(r.created_at).toLocaleDateString('en-NG'),r.customer_name,'NIN registration','',1,Number(r.total_amount||0),'',Math.max(0,Number(r.total_amount||0)-Number(r.amount_paid||0)),r.status]));
-    reportData.sim.forEach(r=>rows.push(['SIM registration',new Date(r.created_at).toLocaleDateString('en-NG'),r.customer_name,`${r.network} SIM registration`,r.network,1,Number(r.total_amount||0),'',Math.max(0,Number(r.total_amount||0)-Number(r.amount_paid||0)),'Recorded']));
-    const customerByKey=new Map([...ninPayments.map(r=>[`nin:${r.id}`,r.customer_name]),...simPayments.map(r=>[`sim:${r.id}`,r.customer_name]),...reportData.sales.map(r=>[`sale:${r.rawId}`,r.name])]);
-    reportData.payments.forEach(p=>rows.push(['Payment received',new Date(p.created_at).toLocaleDateString('en-NG'),customerByKey.get(`${p.record_type}:${p.record_id}`)||'Customer',`${p.record_type.toUpperCase()} payment`,'','', '',Number(p.amount||0),'','Received']));
-    rows.push(['TOTALS','','','','',periodProductQuantity,periodSalesValue,periodRevenue,periodUnpaid,'']);
-    rows.push(['NIN payments','','','','','','',periodNinPaid,'','']);
-    rows.push(['SIM payments','','','','','','',periodSimPaid,'','']);
-    const csv=rows.map(row=>row.map(value=>`"${String(value??'').replaceAll('"','""')}"`).join(',')).join('\r\n');
-    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`zomo-${reportPeriod==='This week'?'weekly':'monthly'}-business-report.csv`;a.click();URL.revokeObjectURL(a.href);notify(`${reportPeriod} business report downloaded.`);
+    const productRows=[...productTotals].map(([product,item])=>[product,item.quantity.toLocaleString('en-NG'),money(item.amount),money(item.received),money(item.unpaid)]);
+    const serviceRows=[
+      ...reportData.nin.map(row=>({date:row.created_at,data:[new Date(row.created_at).toLocaleDateString('en-NG'),'NIN registration',row.customer_name,'—',money(row.total_amount),money(row.amount_paid),money(Math.max(0,Number(row.total_amount)-Number(row.amount_paid))),row.status==='done'?'Done':'Pending']})),
+      ...reportData.sim.map(row=>({date:row.created_at,data:[new Date(row.created_at).toLocaleDateString('en-NG'),'SIM registration',row.customer_name,row.network,money(row.total_amount),money(row.amount_paid),money(Math.max(0,Number(row.total_amount)-Number(row.amount_paid))),'Recorded']})),
+    ].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(row=>row.data);
+    const customerByKey=new Map([...reportData.nin.map(row=>[`nin:${row.id}`,row.customer_name]),...reportData.sim.map(row=>[`sim:${row.id}`,row.customer_name]),...reportData.sales.map(row=>[`sale:${row.rawId}`,row.name])]);
+    const paymentRows=reportData.payments.map(payment=>[new Date(payment.created_at).toLocaleDateString('en-NG'),payment.record_type.toUpperCase(),customerByKey.get(`${payment.record_type}:${payment.record_id}`)||'Customer',money(payment.amount)]);
+    const reportScope=userRole==='owner'?'Company report':'My sales report';
+    const periodLabel=reportPeriod==='This week'?'Weekly report':'Monthly report';
+    const opened=openPrintableReport({title:`${reportScope} · ${periodLabel}`,period:reportPeriod,preparedFor:accountName,summary:[['Product units sold',periodProductQuantity.toLocaleString('en-NG')],['Gadget sales value',money(periodSalesValue)],['Money received',money(periodRevenue)],['Money still unpaid',money(periodUnpaid)],['NIN money received',money(periodNinPaid)],['SIM money received',money(periodSimPaid)]],sections:[
+      {title:'Product sales by item',description:'Sales are grouped by gadget. Collections reflect payments received during the selected reporting period.',headers:['Product','Units sold','Sales value','Received this period','Balance outstanding'],rows:productRows},
+      {title:'SIM and NIN registrations',description:'Service fees, amounts received and outstanding customer balances for requests recorded in this period.',headers:['Date','Service','Customer','Network','Fee','Paid','Unpaid','Status'],rows:serviceRows},
+      {title:'Payment collection log',description:'Payments collected during the selected reporting period.',headers:['Date','Type','Customer','Amount received'],rows:paymentRows},
+    ]});
+    if(!opened) notify('Allow pop-ups for this site to print or save the report as a PDF.');
   }
 
   const authScreenOpen = !isSupabaseConfigured || (authReady && !session);
@@ -316,11 +372,11 @@ function App() {
             <section className="team-spotlight"><div className="team-spotlight-top"><span>{userRole==='owner'?'SALES TEAM':'YOUR SALES PROFILE'}</span>{userRole==='owner'&&<button onClick={()=>setView('Team')}>Manage team <ArrowRight size={14}/></button>}</div>{team.length?<><div className="team-spotlight-main"><div><div className="avatar-stack">{userRole==='owner'&&team.slice(0,4).map(x=><div key={x.id} className={`avatar sm ${x.color}`}>{x.initials}</div>)}</div><p><strong>{userRole==='owner'?`${team.length} sales representatives`:'Sales representative'}</strong><br/>{userRole==='owner'?'in this workspace':'your account'}</p></div><div className="team-spotlight-stat"><span>{userRole==='owner'?'Top recorded sales':'Your recorded sales'}</span><strong>{topRepresentative?.name.split(' ')[0]}</strong><small>{money(topRepresentative?.sales||0)} in latest transactions</small></div></div></>:<div className="team-empty"><Users size={22}/><span>{userRole==='owner'?'No sales representatives added yet.':'Your sales profile is not linked yet.'}</span></div>}</section></div>
         </>}
 
-        {view==='Inventory'&&<section className="panel full-table-panel"><div className="inventory-toolbar"><div className="filter-tabs">{['All products','In stock','Low stock','Out of stock'].map(x=><button key={x} className={category===x?'filter-active':''} onClick={()=>setCategory(x)}>{x}{x==='All products'&&<span>{products.length}</span>}</button>)}</div><div className="table-tools"><label className="search-box"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products..."/><kbd>⌘ K</kbd></label><button className="filter-button" onClick={downloadReport}><ArrowDownToLine size={15}/> Export</button>{userRole==='owner'&&<button className="button button-primary" onClick={()=>{setForm({name:'',category:'Smartphones',stock:'',price:'',cost:'',productId:''});setModal('product')}}><Plus size={15}/> Add product</button>}</div></div><ProductTable products={filteredProducts} onDelete={deleteProduct} onEdit={editProduct} canDelete={userRole==='owner'}/></section>}
-        {view==='Sales'&&<section className="panel full-table-panel"><div className="inventory-toolbar"><div className="table-view-heading"><h2>{userRole==='owner'?'All transactions':'Your transactions'}</h2><span>{sales.length} total</span></div><div className="table-tools"><label className="search-box"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search sales..."/></label><button className="filter-button" onClick={downloadSalesReport}><ArrowDownToLine size={15}/> Export report</button><button className="button button-primary" onClick={()=>{setForm({name:'',stock:'',productId:'',amountPaid:''});setModal('sale')}}><Plus size={15}/> Record sale</button></div></div><SalesTable sales={sales.filter(s=>`${s.id} ${s.name} ${s.product}`.toLowerCase().includes(search.toLowerCase()))} all onAddPayment={setPaymentTarget}/></section>}
+        {view==='Inventory'&&<section className="panel full-table-panel"><div className="inventory-toolbar"><div className="filter-tabs">{['All products','In stock','Low stock','Out of stock'].map(x=><button key={x} className={category===x?'filter-active':''} onClick={()=>setCategory(x)}>{x}{x==='All products'&&<span>{products.length}</span>}</button>)}</div><div className="table-tools"><label className="search-box"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products..."/><kbd>⌘ K</kbd></label><button className="filter-button" onClick={downloadReport}><ArrowDownToLine size={15}/> Save inventory PDF</button>{userRole==='owner'&&<button className="button button-primary" onClick={()=>{setForm({name:'',category:'Smartphones',stock:'',price:'',cost:'',productId:''});setModal('product')}}><Plus size={15}/> Add product</button>}</div></div><ProductTable products={filteredProducts} onDelete={deleteProduct} onEdit={editProduct} canDelete={userRole==='owner'}/></section>}
+        {view==='Sales'&&<section className="panel full-table-panel"><div className="inventory-toolbar"><div className="table-view-heading"><h2>{userRole==='owner'?'All transactions':'Your transactions'}</h2><span>{sales.length} total</span></div><div className="table-tools"><label className="search-box"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search sales..."/></label><button className="filter-button" onClick={downloadSalesReport}><ArrowDownToLine size={15}/> Save report as PDF</button><button className="button button-primary" onClick={()=>{setForm({name:'',stock:'',productId:'',amountPaid:''});setModal('sale')}}><Plus size={15}/> Record sale</button></div></div><SalesTable sales={sales.filter(s=>`${s.id} ${s.name} ${s.product}`.toLowerCase().includes(search.toLowerCase()))} all onAddPayment={setPaymentTarget}/></section>}
         {view==='SIM & NIN'&&<ServicesView client={client} session={session} workspaceOwnerId={workspaceOwnerId} userRole={userRole} notify={notify}/>}
         {view==='Team'&&(userRole==='owner'?<TeamView team={team} salesCount={sales.length} setModal={setModal} setForm={setForm} deleteRep={deleteRep} notify={notify}/>:<AccessPanel/>)}
-        {view==='Reports'&&<section className="reports-grid"><div className="report-intro"><div className="report-icon"><FileBarChart size={20}/></div><div><h2>Business reports</h2><p>Product sales, service payments and outstanding balances for the selected period.</p></div><button className="button button-primary" onClick={downloadSalesReport}><Download size={15}/> Download report</button></div><div className="report-period-control"><span>Report period</span><div role="group" aria-label="Sales report period"><button className={reportPeriod==='This week'?'selected':''} onClick={()=>setReportPeriod('This week')}>Weekly</button><button className={reportPeriod==='This month'?'selected':''} onClick={()=>setReportPeriod('This month')}>Monthly</button></div></div><div className="report-cards"><ReportCard label="Product quantity sold" value={periodProductQuantity.toLocaleString()} caption="Units sold this period" icon={<Package size={17}/>} tone="orange"/><ReportCard label="Gadget sales value" value={money(periodSalesValue)} caption="Value of products sold" icon={<Wallet size={17}/>} tone="blue"/><ReportCard label="Total money received" value={money(periodRevenue)} caption="Payments collected this period" icon={<TrendingUp size={17}/>} tone="green"/><ReportCard label="Money still unpaid" value={money(periodUnpaid)} caption="Open balances on this period’s sales and services" icon={<CreditCard size={17}/>} tone="purple"/><ReportCard label="NIN money received" value={money(periodNinPaid)} caption="NIN payments collected this period" icon={<ClipboardList size={17}/>} tone="blue"/><ReportCard label="SIM money received" value={money(periodSimPaid)} caption="SIM payments collected this period" icon={<Smartphone size={17}/>} tone="orange"/><ReportCard label="Current stock value" value={money(totalValue)} caption="Recorded gadget purchase cost" icon={<Boxes size={17}/>} tone="green"/><ReportCard label="Products to reorder" value={lowStock.length} caption="Low or out of stock" icon={<Package size={17}/>} tone="purple"/></div><section className="panel table-panel"><div className="panel-header"><div><h2>Inventory valuation</h2><p>Calculated from each product’s recorded purchase cost. Stock on hand includes available SIMs.</p></div></div><div className="valuation-list">{categoryBreakdown.map(({name,count,tone})=>{const items=products.filter(p=>p.category===name);const value=items.reduce((s,p)=>s+Number(p.stock)*Number(p.cost||0),0);return <div key={name} className="valuation-row"><span className={`valuation-dot ${tone}`}/><strong>{name}</strong><span>{count.toLocaleString()} units</span><div className="valuation-bar"><i style={{width:`${productUnits?Math.max(count/productUnits*100,0):0}%`}}/></div><b>{money(value)}</b></div>})}</div></section></section>}
+        {view==='Reports'&&<section className="reports-grid"><div className="report-intro"><div className="report-icon"><FileBarChart size={20}/></div><div><h2>{userRole==='owner'?'Business reports':'My sales reports'}</h2><p>{userRole==='owner'?'Product sales, service payments and outstanding balances for the selected period.':'This report includes only sales, registrations and payments recorded by you.'}</p></div><button className="button button-primary" onClick={downloadSalesReport}><Download size={15}/> Save as PDF</button></div><div className="report-period-control"><span>Report period</span><div role="group" aria-label="Sales report period"><button className={reportPeriod==='This week'?'selected':''} onClick={()=>setReportPeriod('This week')}>Weekly</button><button className={reportPeriod==='This month'?'selected':''} onClick={()=>setReportPeriod('This month')}>Monthly</button></div></div><div className="report-cards"><ReportCard label="Product quantity sold" value={periodProductQuantity.toLocaleString()} caption="Units sold this period" icon={<Package size={17}/>} tone="orange"/><ReportCard label="Gadget sales value" value={money(periodSalesValue)} caption="Value of products sold" icon={<Wallet size={17}/>} tone="blue"/><ReportCard label="Total money received" value={money(periodRevenue)} caption="Payments collected this period" icon={<TrendingUp size={17}/>} tone="green"/><ReportCard label="Money still unpaid" value={money(periodUnpaid)} caption="Open balances on this period’s sales and services" icon={<CreditCard size={17}/>} tone="purple"/><ReportCard label="NIN money received" value={money(periodNinPaid)} caption="NIN payments collected this period" icon={<ClipboardList size={17}/>} tone="blue"/><ReportCard label="SIM money received" value={money(periodSimPaid)} caption="SIM payments collected this period" icon={<Smartphone size={17}/>} tone="orange"/>{userRole==='owner'&&<><ReportCard label="Current stock value" value={money(totalValue)} caption="Recorded gadget purchase cost" icon={<Boxes size={17}/>} tone="green"/><ReportCard label="Products to reorder" value={lowStock.length} caption="Low or out of stock" icon={<Package size={17}/>} tone="purple"/></>}</div>{userRole==='owner'&&<section className="panel table-panel"><div className="panel-header"><div><h2>Inventory valuation</h2><p>Calculated from each product’s recorded purchase cost. Stock on hand includes available SIMs.</p></div></div><div className="valuation-list">{categoryBreakdown.map(({name,count,tone})=>{const items=products.filter(p=>p.category===name);const value=items.reduce((s,p)=>s+Number(p.stock)*Number(p.cost||0),0);return <div key={name} className="valuation-row"><span className={`valuation-dot ${tone}`}/><strong>{name}</strong><span>{count.toLocaleString()} units</span><div className="valuation-bar"><i style={{width:`${productUnits?Math.max(count/productUnits*100,0):0}%`}}/></div><b>{money(value)}</b></div>})}</div></section>}</section>}
         {view==='Settings'&&<SettingsView isConfigured={isSupabaseConfigured} cloudState={cloudState} setView={setView} signOut={signOut}/>}
       </section>
       <footer className="app-footer"><span>© 2026 ZOMO ADVANCED TECHNOLOGIES LIMITED</span><span><ShieldCheck size={12}/> Secure inventory management</span><span>Made for ambitious businesses <span className="footer-heart">✳</span></span></footer>
