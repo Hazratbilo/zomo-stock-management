@@ -68,6 +68,19 @@
 .app-shell.dark-mode .registration-privacy,.app-shell.dark-mode .service-db-notice{background:#292319;border-color:#57452b;color:#e0c997}
 .app-shell.dark-mode .setup-error{background:#3a2026;color:#ffc7cd}
 
+.service-pricing-form{display:flex;align-items:center;gap:12px;padding:13px 15px}
+.service-pricing-form>div{flex:1;min-width:0}
+.service-pricing-form h2{font:700 12px Manrope,sans-serif;color:#2c394e}
+.service-pricing-form p{margin-top:4px;font-size:9px;color:#909aaa}
+.service-pricing-form label,.network-input-label{display:flex;flex-direction:column;gap:4px;color:#788397;font-size:8px;font-weight:600}
+.service-pricing-form input,.network-input-label input{height:30px;min-width:105px;border:1px solid #e5e8ef;border-radius:6px;padding:0 8px;font:500 9px 'DM Sans',sans-serif;color:#3c485b;background:#fff}
+.service-price-readonly{padding:12px 15px}
+.network-input-label input{width:84px;min-width:0}
+.network-stock-card{flex-wrap:wrap}
+.app-shell.dark-mode .service-pricing-form p,.app-shell.dark-mode .service-pricing-form label,.app-shell.dark-mode .network-input-label{color:#9aa8bc}
+.app-shell.dark-mode .service-pricing-form input,.app-shell.dark-mode .network-input-label input{background:#101827;border-color:#334158;color:#e5ecf6}
+@media(max-width:640px){.service-pricing-form{align-items:stretch;flex-direction:column}.service-pricing-form>div{width:100%}.service-pricing-form input{width:100%}.service-pricing-form>.button{width:100%;justify-content:center}.network-stock-card{align-items:stretch}.network-stock-info{flex-basis:calc(100% - 45px)}.network-input-label{flex:1}.network-input-label input{width:100%}.network-stock-card>.button{flex:0 0 100%;justify-content:center}}
+
 /* Small-screen layout safeguards */
 .app-shell.auth-open{height:100dvh;min-height:100dvh;overflow:hidden}
 @media(max-width:850px){.sidebar{overflow-y:auto;overscroll-behavior:contain}.main-shell{min-width:0}.content{width:100%;min-width:0}.table-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}}
