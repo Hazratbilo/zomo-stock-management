@@ -166,3 +166,36 @@ h1{font-size:28px;letter-spacing:-.9px}
 @media(max-width:850px){.sidebar{width:250px}.main-shell{margin-left:0}.topbar{height:64px}}
 @media(max-width:640px){.content{padding:24px 16px 18px}.topbar{padding:0 16px}.page-heading{margin-bottom:20px}h1{font-size:24px}.page-heading>div:first-child>p{font-size:12px}.eyebrow{font-size:8px}.metrics-grid{gap:10px}.metric-card{padding:13px}.metric-top{font-size:10px}.metric-icon{width:31px;height:31px}.metric-value{font-size:22px}.metric-bottom>span:first-child{font-size:9px}.metric-trend{font-size:8px}.panel-header h2,.service-panel-head h2{font-size:13px}.panel-header p,.service-panel-head p{font-size:10px}.data-table th{font-size:9px}.data-table td{font-size:11px}.report-card>span:nth-child(2){font-size:9px}.report-card>strong{font-size:17px}.report-card>small{font-size:9px}.button{height:39px;font-size:11px}.modal{padding:20px}.modal-form>label,.form-row label{font-size:11px}.modal-form input,.modal-form select{font-size:12px}.service-overview-copy>strong{font-size:16px}}
 @media(max-width:380px){.content{padding-left:12px;padding-right:12px}.topbar{padding-left:12px;padding-right:12px}.metrics-grid{grid-template-columns:1fr}.metric-value{font-size:24px}}
+
+/* Subtle motion and feedback */
+@keyframes zomo-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes zomo-soft-in{from{opacity:0}to{opacity:1}}
+@keyframes zomo-chart-draw{to{stroke-dashoffset:0}}
+@keyframes zomo-progress-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes zomo-menu-in{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.content>.page-heading{animation:zomo-enter .42s cubic-bezier(.2,.7,.25,1) both}
+.metrics-grid .metric-card{animation:zomo-enter .44s cubic-bezier(.2,.7,.25,1) both}
+.metrics-grid .metric-card:nth-child(2){animation-delay:45ms}
+.metrics-grid .metric-card:nth-child(3){animation-delay:90ms}
+.metrics-grid .metric-card:nth-child(4){animation-delay:135ms}
+.overview-grid>.panel{animation:zomo-enter .48s cubic-bezier(.2,.7,.25,1) 100ms both}
+.dashboard-bottom>*{animation:zomo-enter .48s cubic-bezier(.2,.7,.25,1) 150ms both}
+.content>.panel,.reports-grid>.report-intro,.reports-grid>.report-period-control,.reports-grid>.report-cards{animation:zomo-enter .4s cubic-bezier(.2,.7,.25,1) both}
+.sales-chart path:nth-of-type(2){stroke-dasharray:1100;stroke-dashoffset:1100;animation:zomo-chart-draw 1.15s cubic-bezier(.25,.7,.25,1) .2s forwards}
+.progress-track>span,.valuation-bar i{transform:scaleX(0);transform-origin:left center;animation:zomo-progress-fill .7s cubic-bezier(.2,.7,.25,1) .12s forwards}
+.row-menu{transform-origin:top right;animation:zomo-menu-in .16s ease-out both}
+.button,.icon-button,.nav-item,.filter-tabs button,.report-period-control button,.topbar-avatar,.more-button{transition:transform .18s ease,background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.button:active,.icon-button:active,.more-button:active{transform:scale(.97)}
+.button-ghost:hover,.filter-button:hover{box-shadow:0 4px 12px #19294310}
+.icon-button:hover,.topbar-avatar:hover,.more-button:hover{transform:translateY(-1px)}
+.nav-item:hover{transform:translateX(2px)}
+.filter-tabs button:hover,.report-period-control button:hover{color:#4c62ce;background:#f4f6ff}
+.search-box,.modal-form input,.modal-form select,.subtle-select{transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
+.search-box:focus-within,.modal-form input:focus,.modal-form select:focus{border-color:#8392ed;box-shadow:0 0 0 3px #687ce51c}
+.metric-card,.report-card,.team-summary{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+@media(hover:hover){.metric-card:hover,.report-card:hover,.team-summary:hover{transform:translateY(-3px);border-color:#dce2f1;box-shadow:0 12px 28px #1c2d4a10}}
+.modal-backdrop{animation:zomo-soft-in .18s ease-out both}
+.modal{transform-origin:center;animation:pop-in .2s cubic-bezier(.2,.75,.3,1) both}
+.auth-screen{animation:zomo-soft-in .3s ease-out both}
+.auth-card{animation:zomo-enter .38s cubic-bezier(.2,.7,.25,1) both}
+@media(prefers-reduced-motion:reduce){.content>.page-heading,.metrics-grid .metric-card,.overview-grid>.panel,.dashboard-bottom>*,.content>.panel,.reports-grid>.report-intro,.reports-grid>.report-period-control,.reports-grid>.report-cards,.sales-chart path:nth-of-type(2),.progress-track>span,.valuation-bar i,.row-menu,.modal-backdrop,.modal,.auth-screen,.auth-card{animation:none!important;transform:none!important}.metric-card,.report-card,.team-summary,.button,.icon-button,.nav-item,.filter-tabs button,.report-period-control button,.topbar-avatar,.more-button{transition:none!important}}
