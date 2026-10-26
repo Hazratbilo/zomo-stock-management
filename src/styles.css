@@ -67,3 +67,9 @@
 .app-shell.dark-mode .report-period-control button.selected{background:#273653;color:#e1e8ff;box-shadow:none}
 .app-shell.dark-mode .registration-privacy,.app-shell.dark-mode .service-db-notice{background:#292319;border-color:#57452b;color:#e0c997}
 .app-shell.dark-mode .setup-error{background:#3a2026;color:#ffc7cd}
+
+/* Small-screen layout safeguards */
+.app-shell.auth-open{height:100dvh;min-height:100dvh;overflow:hidden}
+@media(max-width:850px){.sidebar{overflow-y:auto;overscroll-behavior:contain}.main-shell{min-width:0}.content{width:100%;min-width:0}.table-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}}
+@media(max-width:640px){.page-heading,.panel-header,.inventory-toolbar,.topbar,.topbar-actions{min-width:0}.page-heading>div:first-child>p{font-size:11px}.eyebrow{font-size:8px}.metric-top{font-size:10px}.data-table th{font-size:9px}.data-table td{font-size:10px}.table-heading .text-link{font-size:9px}.metric-bottom>span:first-child{font-size:9px}.metric-trend{font-size:8px}.report-card>span:nth-child(2),.report-card>small{font-size:9px}.modal-form>label,.form-row label{font-size:10px}.modal-form input,.modal-form select{font-size:11px}.filter-tabs{scrollbar-width:thin}.modal{width:min(100%,520px)}}
+@media(max-width:380px){.today{display:none}.topbar-actions{gap:6px}.breadcrumb{min-width:0;overflow:hidden}.breadcrumb>span{display:none}.content{padding-left:10px;padding-right:10px}}
