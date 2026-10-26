@@ -86,3 +86,83 @@
 @media(max-width:850px){.sidebar{overflow-y:auto;overscroll-behavior:contain}.main-shell{min-width:0}.content{width:100%;min-width:0}.table-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}}
 @media(max-width:640px){.page-heading,.panel-header,.inventory-toolbar,.topbar,.topbar-actions{min-width:0}.page-heading>div:first-child>p{font-size:11px}.eyebrow{font-size:8px}.metric-top{font-size:10px}.data-table th{font-size:9px}.data-table td{font-size:10px}.table-heading .text-link{font-size:9px}.metric-bottom>span:first-child{font-size:9px}.metric-trend{font-size:8px}.report-card>span:nth-child(2),.report-card>small{font-size:9px}.modal-form>label,.form-row label{font-size:10px}.modal-form input,.modal-form select{font-size:11px}.filter-tabs{scrollbar-width:thin}.modal{width:min(100%,520px)}}
 @media(max-width:380px){.today{display:none}.topbar-actions{gap:6px}.breadcrumb{min-width:0;overflow:hidden}.breadcrumb>span{display:none}.content{padding-left:10px;padding-right:10px}}
+
+/* Readability and visual hierarchy polish */
+:root{--navy:#142039;--line:#e7ebf2;--card:#fff;--ink:#1b2940;background:#f4f6fb;color:#1b2940}
+body{background:#f4f6fb}
+.app-shell{background:#f4f6fb}
+.sidebar{width:258px;padding:25px 17px 15px;background:linear-gradient(180deg,#142039 0%,#101a2e 100%)}
+.main-shell{margin-left:258px}
+.topbar{height:68px;padding:0 42px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom-color:#e7ebf2}
+.content{padding:36px 42px 28px}
+.brand-type{font-size:17px}
+.brand-type span,.workspace-meta>span,.nav-label{font-size:9px}
+.workspace-meta strong{font-size:12px}
+.workspace{margin-bottom:27px}
+.side-nav{gap:24px}
+.nav-item{height:43px;font-size:13px}
+.breadcrumb,.today,.sync-status{font-size:11px}
+.page-heading{margin-bottom:27px}
+h1{font-size:28px;letter-spacing:-.9px}
+.page-heading>div:first-child>p{font-size:13px;line-height:1.5}
+.eyebrow{font-size:9px;letter-spacing:1.35px}
+.button{height:40px;padding:0 15px;border-radius:8px;font-size:11px}
+.button-primary{box-shadow:0 5px 14px #536bda26}
+.metric-card,.panel,.team-summary,.report-card{border-radius:12px;border-color:#e8ecf3}
+.metric-card{padding:17px 18px 15px;box-shadow:0 3px 12px #1e2d4508}
+.metric-top{font-size:11px}
+.metric-icon{width:35px;height:35px;border-radius:10px}
+.metric-value{font-size:27px;margin-top:10px}
+.metric-bottom{margin-top:9px}
+.metric-bottom>span:first-child{font-size:10px}
+.metric-trend{font-size:9px}
+.sales-panel,.stock-panel{padding:21px 22px 18px}
+.panel-header h2,.service-panel-head h2,.settings-panel h2{font-size:14px}
+.panel-header p,.service-panel-head p{font-size:11px;line-height:1.5}
+.chart-legend{font-size:10px}
+.category-details>div:first-child strong,.category-details>div:first-child span{font-size:11px}
+.text-link{font-size:10px}
+.table-panel,.low-stock-panel{padding:19px 20px 10px}
+.data-table th{font-size:9px;letter-spacing:.55px}
+.data-table td{font-size:11px}
+.product-cell strong,.customer-cell strong{font-size:12px}
+.product-cell span,.team-email,.customer-cell small{font-size:10px}
+.filter-tabs button,.table-view-heading h2{font-size:11px}
+.search-box input{font-size:12px}
+.filter-button{font-size:10px}
+.status-pill{font-size:9px}
+.inventory-toolbar{gap:15px}
+.report-intro{padding:19px 21px;border-radius:12px}
+.report-intro h2{font-size:15px}
+.report-intro p{font-size:11px;line-height:1.5}
+.report-period-control{padding:13px 16px}
+.report-period-control>span{font-size:10px}
+.report-period-control button{font-size:10px}
+.report-card{padding:15px;gap:9px}
+.report-card>span:nth-child(2){font-size:10px}
+.report-card>strong{font-size:20px}
+.report-card>small{font-size:10px;line-height:1.4}
+.valuation-row>strong,.valuation-row>b{font-size:10px}
+.modal{border-radius:14px;padding:24px 26px 22px;box-shadow:0 24px 70px #111a2d38}
+.modal-header h2{font-size:17px}
+.modal-header p{font-size:11px;line-height:1.5}
+.modal-form{gap:15px}
+.modal-form>label,.form-row label{font-size:11px;gap:7px}
+.modal-form input,.modal-form select{height:41px;font-size:12px;border-radius:8px}
+.form-footnote{font-size:10px;line-height:1.4}
+.service-tabs button{font-size:11px}
+.service-overview{padding:19px 21px;border-radius:12px}
+.service-overview-copy>span{font-size:9px}
+.service-overview-copy>strong{font-size:18px}
+.service-overview-copy>small{font-size:10px}
+.network-stock-card{padding:13px;border-radius:10px}
+.network-stock-info>strong{font-size:12px}
+.network-stock-info>small,.network-input-label{font-size:9px}
+.service-table td{font-size:10px}
+.nin-state,.nin-state-label{font-size:9px}
+.toast{font-size:12px;padding:12px 16px;border-radius:10px}
+.app-footer{font-size:10px}
+@media(max-width:1120px){.content{padding-left:30px;padding-right:30px}.topbar{padding-left:30px;padding-right:30px}}
+@media(max-width:850px){.sidebar{width:250px}.main-shell{margin-left:0}.topbar{height:64px}}
+@media(max-width:640px){.content{padding:24px 16px 18px}.topbar{padding:0 16px}.page-heading{margin-bottom:20px}h1{font-size:24px}.page-heading>div:first-child>p{font-size:12px}.eyebrow{font-size:8px}.metrics-grid{gap:10px}.metric-card{padding:13px}.metric-top{font-size:10px}.metric-icon{width:31px;height:31px}.metric-value{font-size:22px}.metric-bottom>span:first-child{font-size:9px}.metric-trend{font-size:8px}.panel-header h2,.service-panel-head h2{font-size:13px}.panel-header p,.service-panel-head p{font-size:10px}.data-table th{font-size:9px}.data-table td{font-size:11px}.report-card>span:nth-child(2){font-size:9px}.report-card>strong{font-size:17px}.report-card>small{font-size:9px}.button{height:39px;font-size:11px}.modal{padding:20px}.modal-form>label,.form-row label{font-size:11px}.modal-form input,.modal-form select{font-size:12px}.service-overview-copy>strong{font-size:16px}}
+@media(max-width:380px){.content{padding-left:12px;padding-right:12px}.topbar{padding-left:12px;padding-right:12px}.metrics-grid{grid-template-columns:1fr}.metric-value{font-size:24px}}

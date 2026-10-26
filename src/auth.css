@@ -14,3 +14,30 @@
 .app-shell.dark-mode .auth-theme-toggle{background:#172238;border-color:#34425a;color:#e2e9f6}
 .app-shell.dark-mode .auth-theme-toggle:hover{background:#25334b}
 
+/* Clearer sign-in and first-run setup screens */
+.auth-screen{background:radial-gradient(ellipse at 48% 38%,#eef1ff 0%,#f6f7fb 58%,#f2f5fa 100%);padding:28px}
+.auth-card{width:min(100%,420px);padding:36px;border-radius:18px;border-color:#e6eaf2;box-shadow:0 24px 72px #18274614}
+.auth-card .brand-mark{height:42px;width:42px;border-radius:13px;margin-bottom:22px;font-size:24px}
+.auth-kicker{font-size:9px;letter-spacing:1.4px}
+.auth-card>h1{font-size:26px;letter-spacing:-.6px;margin-top:14px}
+.auth-card>p{font-size:12px;line-height:1.6;color:#7f8a9c;margin-top:8px;margin-bottom:23px}
+.auth-card .modal-form{gap:16px}
+.auth-card .modal-form>label{font-size:11px;gap:8px}
+.auth-card .modal-form input{height:43px;font-size:13px;border-radius:8px}
+.auth-submit{height:44px;font-size:12px;border-radius:9px}
+.auth-card .auth-security{font-size:10px;line-height:1.5;padding-top:16px;margin-top:20px}
+.auth-card.setup-card{width:min(100%,620px);padding:36px;max-height:calc(100dvh - 48px);border-radius:20px}
+.setup-card>p{font-size:12px;line-height:1.6;margin-bottom:20px}
+.setup-steps{gap:13px;margin-bottom:20px}
+.setup-steps li{gap:12px}
+.setup-steps li>span{flex-basis:27px;height:27px;font-size:11px}
+.setup-steps li>div{gap:4px}
+.setup-steps strong{font-size:12px}
+.setup-steps small,.setup-steps a{font-size:11px;line-height:1.55}
+.setup-form{padding-top:18px;gap:14px}
+.setup-form label{font-size:11px}
+.setup-form input{font-size:12px}
+.setup-card .auth-security{font-size:10px}
+.app-shell.dark-mode .auth-screen{background:radial-gradient(ellipse at 48% 38%,#18233a 0%,#0b111d 72%)}
+@media(max-width:640px){.auth-screen{padding:14px}.auth-card{padding:25px;border-radius:15px}.auth-card.setup-card{padding:23px;max-height:calc(100dvh - 28px);border-radius:16px}.auth-card>h1{font-size:23px}.auth-card>p{font-size:11px}.setup-steps{gap:11px}.setup-steps strong{font-size:11px}.setup-steps small,.setup-steps a{font-size:10px}.auth-card .auth-security{font-size:9px}}
+
