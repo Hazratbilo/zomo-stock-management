@@ -134,10 +134,10 @@ function App() {
     (async () => {
       const { data: profile } = await client.from('profiles').select('id, owner_id, role, full_name').eq('id', session.user.id).maybeSingle();
       if (!cancelled && profile) { setUserRole(profile.role); setProfileName(profile.full_name || ''); setWorkspaceOwnerId(profile.role === 'owner' ? profile.id : profile.owner_id); }
-      const { data, error } = await client.from('products').select('*').is('archived_at', null).order('created_at', { ascending: false });
+      const { data, error } = await client.from('products').select('*').order('created_at', { ascending: false });
       if (!cancelled) {
         if (error) { setCloudState('error'); notify('Could not load your Supabase inventory. Check your project setup and access.'); }
-        else { setProducts((data || []).map(p => ({...p,image: p.image || '📦', color: p.color || 'blue', status: p.stock === 0 ? 'Out of stock' : p.stock < 5 ? 'Low stock' : 'In stock', price: Number(p.price) }))); setCloudState('connected'); }
+        else { setProducts((data || []).filter(p=>!p.archived_at).map(p => ({...p,image: p.image || '📦', color: p.color || 'blue', status: p.stock === 0 ? 'Out of stock' : p.stock < 5 ? 'Low stock' : 'In stock', price: Number(p.price) }))); setCloudState('connected'); }
       }
       const { data: reps } = await client.from('profiles').select('*').eq('role', 'sales_rep').eq('active',true);
       if (!cancelled && reps) setTeam(reps.map((p,i) => ({ id:p.id, name:p.full_name, email:p.email, role:'Sales representative', initials:p.full_name.split(' ').map(x=>x[0]).join('').slice(0,2), color:['violet','amber','blue','green'][i%4], sales:0, active:true })));
@@ -151,7 +151,7 @@ function App() {
       if (!cancelled && simStock) setSimUnits(simStock.reduce((sum,row)=>sum+Number(row.stock||0),0));
       await refreshServicePayments();
     })();
-    const refreshProducts = () => client.from('products').select('*').is('archived_at',null).order('created_at',{ascending:false}).then(({data})=>data&&setProducts(data.map(p=>({...p,image:p.image||'📦',color:p.color||'blue',status:p.stock===0?'Out of stock':p.stock<5?'Low stock':'In stock',price:Number(p.price)}))));
+    const refreshProducts = () => client.from('products').select('*').order('created_at',{ascending:false}).then(({data})=>data&&setProducts(data.filter(p=>!p.archived_at).map(p=>({...p,image:p.image||'📦',color:p.color||'blue',status:p.stock===0?'Out of stock':p.stock<5?'Low stock':'In stock',price:Number(p.price)}))));
     const refreshSales = () => client.from('sales').select('id, total, amount_paid, quantity, unit_price, status, created_at, customer_name, representative_id, products(name,cost), profiles!sales_representative_profile_fkey(full_name)').order('created_at',{ascending:false}).limit(1000).then(({data})=>data&&setSales(data.map(formatSale)));
     const refreshSimStock = () => client.from('sim_network_stock').select('stock').then(({data})=>data&&setSimUnits(data.reduce((sum,row)=>sum+Number(row.stock||0),0)));
     const channel = client.channel('zomo-stock-changes')
@@ -241,6 +241,7 @@ function App() {
     if (!client || !product?.id) { notify('This product could not be removed. Refresh and try again.'); return; }
     try {
       const { data, error } = await client.from('products').update({ archived_at: new Date().toISOString() }).eq('id', product.id).is('archived_at', null).select('id').maybeSingle();
+      if (error?.code === '42703' && String(error.message).includes('archived_at')) { notify('The database needs its inventory update first. Open SIM & NIN and use the downloadable SQL setup notice.'); return; }
       if (error) throw error;
       if (!data) { notify('Product was already removed or you do not have permission to remove it. Refresh the page.'); return; }
       setProducts(current=>current.filter(item=>item.id!==product.id)); setMenuOpen(false); notify(`${product.name} removed from active inventory. Past sales history was preserved.`);
