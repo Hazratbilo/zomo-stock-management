@@ -15,6 +15,14 @@ const navGroups = [
   { label: 'MANAGEMENT', items: [ ['Settings',Settings] ] },
 ];
 const money = (n) => '₦' + Number(n).toLocaleString('en-NG');
+const friendlyError = (error, fallback) => {
+  const message = String(error?.message || '').toLowerCase();
+  if (message.includes('permission') || message.includes('row-level security') || message.includes('not allowed')) return 'You do not have permission to do that. Ask the workspace owner if you need access.';
+  if (message.includes('foreign key') || message.includes('referenced')) return 'This record is linked to existing business history and cannot be removed that way.';
+  if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) return 'Connection problem. Check your internet and try again.';
+  if (message.includes('check constraint') || message.includes('invalid input') || message.includes('must be') || message.includes('greater than')) return error.message;
+  return fallback;
+};
 const htmlText = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 const getLagosHour = () => Number(new Intl.DateTimeFormat('en-NG',{timeZone:'Africa/Lagos',hour:'2-digit',hourCycle:'h23'}).format(new Date()));
 const formatSale = (s, i) => ({ rawId:s.id, id:`#${String(s.id).slice(0,8).toUpperCase()}`, initials:(s.customer_name||'WC').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(), name:s.customer_name||'Walk-in customer', product:s.products?.name||'Product', amount:Number(s.total), amountPaid:Number(s.amount_paid ?? (s.status==='completed'?s.total:0)), quantity:Number(s.quantity||0), unitPrice:Number(s.unit_price||0), productCost:Number(s.products?.cost||0), status:s.status==='completed'?'Completed':s.status==='pending'?'Pending':'Cancelled', time:new Date(s.created_at).toLocaleTimeString('en-NG',{hour:'numeric',minute:'2-digit'}), createdAt:s.created_at, rep:s.profiles?.full_name||'Sales representative', repId:s.representative_id, color:['violet','amber','blue','green'][i%4] });
@@ -126,7 +134,7 @@ function App() {
     (async () => {
       const { data: profile } = await client.from('profiles').select('id, owner_id, role, full_name').eq('id', session.user.id).maybeSingle();
       if (!cancelled && profile) { setUserRole(profile.role); setProfileName(profile.full_name || ''); setWorkspaceOwnerId(profile.role === 'owner' ? profile.id : profile.owner_id); }
-      const { data, error } = await client.from('products').select('*').order('created_at', { ascending: false });
+      const { data, error } = await client.from('products').select('*').is('archived_at', null).order('created_at', { ascending: false });
       if (!cancelled) {
         if (error) { setCloudState('error'); notify('Could not load your Supabase inventory. Check your project setup and access.'); }
         else { setProducts((data || []).map(p => ({...p,image: p.image || '📦', color: p.color || 'blue', status: p.stock === 0 ? 'Out of stock' : p.stock < 5 ? 'Low stock' : 'In stock', price: Number(p.price) }))); setCloudState('connected'); }
@@ -143,7 +151,7 @@ function App() {
       if (!cancelled && simStock) setSimUnits(simStock.reduce((sum,row)=>sum+Number(row.stock||0),0));
       await refreshServicePayments();
     })();
-    const refreshProducts = () => client.from('products').select('*').order('created_at',{ascending:false}).then(({data})=>data&&setProducts(data.map(p=>({...p,image:p.image||'📦',color:p.color||'blue',status:p.stock===0?'Out of stock':p.stock<5?'Low stock':'In stock',price:Number(p.price)}))));
+    const refreshProducts = () => client.from('products').select('*').is('archived_at',null).order('created_at',{ascending:false}).then(({data})=>data&&setProducts(data.map(p=>({...p,image:p.image||'📦',color:p.color||'blue',status:p.stock===0?'Out of stock':p.stock<5?'Low stock':'In stock',price:Number(p.price)}))));
     const refreshSales = () => client.from('sales').select('id, total, amount_paid, quantity, unit_price, status, created_at, customer_name, representative_id, products(name,cost), profiles!sales_representative_profile_fkey(full_name)').order('created_at',{ascending:false}).limit(1000).then(({data})=>data&&setSales(data.map(formatSale)));
     const refreshSimStock = () => client.from('sim_network_stock').select('stock').then(({data})=>data&&setSimUnits(data.reduce((sum,row)=>sum+Number(row.stock||0),0)));
     const channel = client.channel('zomo-stock-changes')
@@ -161,9 +169,9 @@ function App() {
   async function refreshServicePayments() {
     if (!client) return;
     const [nin, sim, payments] = await Promise.all([
-      client.from('nin_requests').select('id,representative_id,customer_name,total_amount,amount_paid,status,created_at').order('created_at',{ascending:false}).limit(5000),
+      client.from('nin_requests').select('id,representative_id,customer_name,total_amount,amount_paid,refunded_amount,status,created_at').order('created_at',{ascending:false}).limit(5000),
       client.from('sim_registrations').select('id,representative_id,customer_name,network,total_amount,amount_paid,created_at').order('created_at',{ascending:false}).limit(5000),
-      client.from('payment_transactions').select('id,representative_id,record_type,record_id,amount,created_at').order('created_at',{ascending:false}).limit(5000),
+      client.from('payment_transactions').select('id,representative_id,record_type,record_id,amount,transaction_kind,created_at').order('created_at',{ascending:false}).limit(5000),
     ]);
     if (nin.data) setNinPayments(nin.data);
     if (sim.data) setSimPayments(sim.data);
@@ -196,12 +204,12 @@ function App() {
   }, [sales, ninPayments, simPayments, paymentEvents, reportPeriod, userRole, session?.user?.id]);
   const periodProductQuantity = reportData.sales.reduce((sum,s)=>sum+s.quantity,0);
   const periodSalesValue = reportData.sales.reduce((sum,s)=>sum+s.amount,0);
-  const periodProductPaid = reportData.payments.filter(payment=>payment.record_type==='sale').reduce((sum,payment)=>sum+Number(payment.amount||0),0);
+  const periodProductPaid = reportData.payments.filter(payment=>payment.record_type==='sale').reduce((sum,payment)=>sum+(payment.transaction_kind==='refund'?-1:1)*Number(payment.amount||0),0);
   const periodUnpaid = reportData.sales.reduce((sum,s)=>sum+Math.max(0,s.amount-s.amountPaid),0)
-    + reportData.nin.reduce((sum,row)=>sum+Math.max(0,Number(row.total_amount||0)-Number(row.amount_paid||0)),0)
+    + reportData.nin.reduce((sum,row)=>sum+Math.max(0,Number(row.total_amount||0)-Number(row.amount_paid||0)+Number(row.refunded_amount||0)),0)
     + reportData.sim.reduce((sum,row)=>sum+Math.max(0,Number(row.total_amount||0)-Number(row.amount_paid||0)),0);
-  const periodNinPaid = reportData.payments.filter(payment=>payment.record_type==='nin').reduce((sum,payment)=>sum+Number(payment.amount||0),0);
-  const periodSimPaid = reportData.payments.filter(payment=>payment.record_type==='sim').reduce((sum,payment)=>sum+Number(payment.amount||0),0);
+  const periodNinPaid = reportData.payments.filter(payment=>payment.record_type==='nin').reduce((sum,payment)=>sum+(payment.transaction_kind==='refund'?-1:1)*Number(payment.amount||0),0);
+  const periodSimPaid = reportData.payments.filter(payment=>payment.record_type==='sim').reduce((sum,payment)=>sum+(payment.transaction_kind==='refund'?-1:1)*Number(payment.amount||0),0);
   const periodRevenue = periodProductPaid + periodNinPaid + periodSimPaid;
   const categoryBreakdown = ['Smartphones','Laptops','Audio','Wearables','Accessories','Home Appliances','Solar'].map((name,i)=>({name,count:products.filter(p=>p.category===name).reduce((sum,p)=>sum+Number(p.stock),0),tone:['purple','blue','orange','rose','green','blue','orange'][i]}));
   const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
@@ -213,22 +221,30 @@ function App() {
   async function addProduct(e) {
     e.preventDefault();
     if (!client || !workspaceOwnerId) { notify('Connect and sign in to Supabase before adding products.'); return; }
-    const product = { id: Date.now(), name: form.name.trim(), category: form.category, stock: Number(form.stock), price: Number(form.price), cost: Number(form.cost), image: ({Smartphones:'📱',Laptops:'💻',Audio:'🎧',Wearables:'⌚',Accessories:'🔌','Home Appliances':'🏠',Solar:'☀️'}[form.category] || '📦'), color: 'blue', status: Number(form.stock) === 0 ? 'Out of stock' : Number(form.stock) < 5 ? 'Low stock' : 'In stock' };
+    const name=form.name.trim(), stock=Number(form.stock), price=Number(form.price), cost=Number(form.cost);
+    if (name.length < 1 || name.length > 120) { notify('Enter a product name between 1 and 120 characters.'); return; }
+    if (form.stock.trim()==='' || !Number.isInteger(stock) || stock<0) { notify('Stock must be a whole number of zero or more.'); return; }
+    if (form.price.trim()==='' || !Number.isFinite(price) || price<0 || form.cost.trim()==='' || !Number.isFinite(cost) || cost<0) { notify('Selling price and purchase cost must be valid amounts of zero or more.'); return; }
+    const product = { id: Date.now(), name, category: form.category, stock, price, cost, image: ({Smartphones:'📱',Laptops:'💻',Audio:'🎧',Wearables:'⌚',Accessories:'🔌','Home Appliances':'🏠',Solar:'☀️'}[form.category] || '📦'), color: 'blue', status: stock === 0 ? 'Out of stock' : stock < 5 ? 'Low stock' : 'In stock' };
     if (form.productId) {
       const { data, error } = await client.from('products').update({ name: product.name, category: product.category, stock: product.stock, price: product.price, cost: product.cost, image: product.image }).eq('id', form.productId).select().single();
-      if (error) { notify(error.message); return; }
+      if (error) { notify(friendlyError(error, 'Could not update the product. Please check the details and try again.')); return; }
       setProducts(current => current.map(item => item.id === data.id ? { ...item, ...data, image: data.image || product.image, color: item.color || 'blue', status: data.stock === 0 ? 'Out of stock' : data.stock < 5 ? 'Low stock' : 'In stock', price: Number(data.price) } : item));
       setForm({name:'',category:'Smartphones',stock:'',price:'',cost:'',productId:''}); setModal(''); notify('Product updated.'); return;
     }
     const { data, error } = await client.from('products').insert({ owner_id: workspaceOwnerId, name: product.name, category: product.category, stock: product.stock, price: product.price, cost: product.cost, image: product.image }).select().single();
-    if (error) { notify(error.message); return; }
+    if (error) { notify(friendlyError(error, 'Could not add the product. Please check the details and try again.')); return; }
     setProducts(p => [{ ...data, id: data.id, image: data.image || product.image, color:'blue', status:data.stock < 5 ? (data.stock===0?'Out of stock':'Low stock'):'In stock', price:Number(data.price) }, ...p]);
     setForm({name:'',category:'Smartphones',stock:'',price:'',cost:''}); setModal(''); notify('Product added to your inventory.');
   }
   async function deleteProduct(product) {
-    if (!client) return;
-    const { error } = await client.from('products').delete().eq('id', product.id); if(error){notify(error.message);return;}
-    setProducts(p=>p.filter(x=>x.id!==product.id)); setMenuOpen(false); notify(`${product.name} removed from inventory.`);
+    if (!client || !product?.id) { notify('This product could not be removed. Refresh and try again.'); return; }
+    try {
+      const { data, error } = await client.from('products').update({ archived_at: new Date().toISOString() }).eq('id', product.id).is('archived_at', null).select('id').maybeSingle();
+      if (error) throw error;
+      if (!data) { notify('Product was already removed or you do not have permission to remove it. Refresh the page.'); return; }
+      setProducts(current=>current.filter(item=>item.id!==product.id)); setMenuOpen(false); notify(`${product.name} removed from active inventory. Past sales history was preserved.`);
+    } catch (error) { notify(friendlyError(error, 'Could not remove this product. Check your connection and try again.')); }
   }
   function editProduct(product) {
     setForm({ name: product.name, category: product.category, stock: String(product.stock), price: String(product.price), cost: String(product.cost || 0), productId: product.id });
@@ -318,7 +334,7 @@ function App() {
   function downloadSalesReport() {
     const productTotals=new Map();
     const paymentBySale=new Map();
-    reportData.payments.filter(payment=>payment.record_type==='sale').forEach(payment=>paymentBySale.set(payment.record_id,(paymentBySale.get(payment.record_id)||0)+Number(payment.amount||0)));
+    reportData.payments.filter(payment=>payment.record_type==='sale').forEach(payment=>paymentBySale.set(payment.record_id,(paymentBySale.get(payment.record_id)||0)+(payment.transaction_kind==='refund'?-1:1)*Number(payment.amount||0)));
     reportData.sales.forEach(s=>{
       const paid=paymentBySale.get(s.rawId)||0;
       const item=productTotals.get(s.product)||{quantity:0,amount:0,received:0,unpaid:0};
@@ -327,11 +343,11 @@ function App() {
     });
     const productRows=[...productTotals].map(([product,item])=>[product,item.quantity.toLocaleString('en-NG'),money(item.amount),money(item.received),money(item.unpaid)]);
     const serviceRows=[
-      ...reportData.nin.map(row=>({date:row.created_at,data:[new Date(row.created_at).toLocaleDateString('en-NG'),'NIN registration',row.customer_name,'—',money(row.total_amount),money(row.amount_paid),money(Math.max(0,Number(row.total_amount)-Number(row.amount_paid))),row.status==='done'?'Done':'Pending']})),
+      ...reportData.nin.map(row=>({date:row.created_at,data:[new Date(row.created_at).toLocaleDateString('en-NG'),'NIN registration',row.customer_name,'—',money(row.total_amount),money(Math.max(0,Number(row.amount_paid)-Number(row.refunded_amount||0))),money(Math.max(0,Number(row.total_amount)-Number(row.amount_paid)+Number(row.refunded_amount||0))),row.status==='collected'?'Collected':row.status==='done'?'Done':'Pending']})),
       ...reportData.sim.map(row=>({date:row.created_at,data:[new Date(row.created_at).toLocaleDateString('en-NG'),'SIM registration',row.customer_name,row.network,money(row.total_amount),money(row.amount_paid),money(Math.max(0,Number(row.total_amount)-Number(row.amount_paid))),'Recorded']})),
     ].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(row=>row.data);
     const customerByKey=new Map([...reportData.nin.map(row=>[`nin:${row.id}`,row.customer_name]),...reportData.sim.map(row=>[`sim:${row.id}`,row.customer_name]),...reportData.sales.map(row=>[`sale:${row.rawId}`,row.name])]);
-    const paymentRows=reportData.payments.map(payment=>[new Date(payment.created_at).toLocaleDateString('en-NG'),payment.record_type.toUpperCase(),customerByKey.get(`${payment.record_type}:${payment.record_id}`)||'Customer',money(payment.amount)]);
+    const paymentRows=reportData.payments.map(payment=>[new Date(payment.created_at).toLocaleDateString('en-NG'),`${payment.transaction_kind==='refund'?'REFUND':'PAYMENT'} · ${payment.record_type.toUpperCase()}`,customerByKey.get(`${payment.record_type}:${payment.record_id}`)||'Customer',`${payment.transaction_kind==='refund'?'−':''}${money(payment.amount)}`]);
     const reportScope=userRole==='owner'?'Company report':'My sales report';
     const periodLabel=reportPeriod==='This week'?'Weekly report':'Monthly report';
     const opened=openPrintableReport({title:`${reportScope} · ${periodLabel}`,period:reportPeriod,preparedFor:accountName,summary:[['Product units sold',periodProductQuantity.toLocaleString('en-NG')],['Gadget sales value',money(periodSalesValue)],['Money received',money(periodRevenue)],['Money still unpaid',money(periodUnpaid)],['NIN money received',money(periodNinPaid)],['SIM money received',money(periodSimPaid)]],sections:[
@@ -398,7 +414,7 @@ function SalesChart({sales,period}){const days=period==='Last 7 days'?7:30;const
 
 function SalesTable({sales,all=false,onAddPayment}){return <div className="table-scroll"><table className="data-table"><thead><tr><th>ORDER ID</th><th>CUSTOMER</th><th>PRODUCT</th><th>AMOUNT</th><th>PAID</th><th>UNPAID</th><th>STATUS</th><th>{all?'REPRESENTATIVE':'TIME'}</th>{all&&<th/>}</tr></thead><tbody>{sales.map(s=><tr key={s.id}><td><strong className="order-id">{s.id}</strong></td><td><div className="customer-cell"><div className={`avatar xs ${s.color}`}>{s.initials}</div><strong>{s.name}</strong></div></td><td className="muted-cell">{s.product}</td><td><strong>{money(s.amount)}</strong></td><td>{money(s.amountPaid)}</td><td>{money(Math.max(0,s.amount-s.amountPaid))}</td><td><span className={`status-pill ${s.status==='Completed'?'completed':s.status==='Cancelled'?'out':'pending'}`}><i/> {s.status}</span></td><td className="muted-cell">{all?(s.rep||'Sales representative'):s.time}</td>{all&&<td>{s.amount>s.amountPaid&&<button className="button button-ghost compact" onClick={()=>onAddPayment?.({...s,balance:s.amount-s.amountPaid})}><Wallet size={14}/> Add payment</button>}</td>}</tr>)}</tbody></table>{sales.length===0&&<EmptyState icon={<CreditCard size={22}/>} title="No sales found" text="Your sales will appear here after transactions are recorded."/>}</div>}
 
-function ProductTable({products,onDelete,onEdit,canDelete}){const [open,setOpen]=useState(null);return <div className="table-scroll"><table className="data-table product-table"><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>UNIT PRICE</th><th>STOCK LEVEL</th><th>STATUS</th><th/></tr></thead><tbody>{products.map(p=><tr key={p.id}><td><div className="product-cell"><div className={`product-thumb ${p.color}`}>{p.image}</div><div><strong>{p.name}</strong><span>Product</span></div></div></td><td className="muted-cell">{p.category}</td><td><strong>{money(p.price)}</strong></td><td><strong>{p.stock} <span className="muted-cell">units</span></strong></td><td><span className={`status-pill ${p.stock===0?'out':p.stock<=5?'pending':'completed'}`}><i/>{p.stock===0?'Out of stock':p.stock<=5?'Low stock':'In stock'}</span></td><td className="action-cell">{canDelete&&<><button className="more-button small-more" aria-label={`Options for ${p.name}`} onClick={()=>setOpen(open===p.id?null:p.id)}><MoreHorizontal size={18}/></button>{open===p.id&&<div className="row-menu"><button onClick={()=>{onEdit(p);setOpen(null)}}><Pencil size={14}/> Edit product</button><button className="delete-action" onClick={()=>{onDelete(p);setOpen(null)}}><X size={14}/> Delete product</button></div>}</>}</td></tr>)}</tbody></table>{products.length===0&&<EmptyState icon={<Package size={22}/>} title="No products found" text="Your inventory will appear here after products are added."/>}</div>}
+function ProductTable({products,onDelete,onEdit,canDelete}){const [open,setOpen]=useState(null);return <div className="table-scroll"><table className="data-table product-table"><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>UNIT PRICE</th><th>STOCK LEVEL</th><th>STATUS</th><th/></tr></thead><tbody>{products.map(p=><tr key={p.id}><td><div className="product-cell"><div className={`product-thumb ${p.color}`}>{p.image}</div><div><strong>{p.name}</strong><span>Product</span></div></div></td><td className="muted-cell">{p.category}</td><td><strong>{money(p.price)}</strong></td><td><strong>{p.stock} <span className="muted-cell">units</span></strong></td><td><span className={`status-pill ${p.stock===0?'out':p.stock<=5?'pending':'completed'}`}><i/>{p.stock===0?'Out of stock':p.stock<=5?'Low stock':'In stock'}</span></td><td className="action-cell">{canDelete&&<><button className="more-button small-more" aria-label={`Options for ${p.name}`} onClick={()=>setOpen(open===p.id?null:p.id)}><MoreHorizontal size={18}/></button>{open===p.id&&<div className="row-menu"><button onClick={()=>{onEdit(p);setOpen(null)}}><Pencil size={14}/> Edit product</button><button className="delete-action" onClick={()=>{onDelete(p);setOpen(null)}}><X size={14}/> Remove from inventory</button></div>}</>}</td></tr>)}</tbody></table>{products.length===0&&<EmptyState icon={<Package size={22}/>} title="No products found" text="Your inventory will appear here after products are added."/>}</div>}
 
 function TeamView({team,salesCount,setModal,setForm,deleteRep,notify}){const [open,setOpen]=useState(null);return <><div className="team-metrics"><div className="team-summary"><span>YOUR SALES TEAM</span><strong>{team.length}<small> members</small></strong><p>All team members report to the workspace owner.</p></div><div className="team-summary"><span>RECORDED REP SALES</span><strong>{money(team.reduce((s,x)=>s+x.sales,0))}</strong><p>Across the latest loaded transactions.</p></div><div className="team-summary"><span>SALES TRANSACTIONS</span><strong>{salesCount}</strong><p>Latest transactions in this workspace.</p></div></div><section className="panel full-table-panel"><div className="inventory-toolbar"><div className="table-view-heading"><h2>Team members</h2><span>{team.length} sales representatives</span></div><button className="button button-primary" onClick={()=>{setForm({name:'',email:'',password:''});setModal('rep')}}><Plus size={15}/> Add team member</button></div><div className="table-scroll"><table className="data-table"><thead><tr><th>TEAM MEMBER</th><th>ROLE</th><th>RECORDED SALES</th><th>STATUS</th><th/></tr></thead><tbody>{team.map(x=><tr key={x.id}><td><div className="customer-cell"><div className={`avatar ${x.color}`}>{x.initials}</div><span><strong>{x.name}</strong><small className="team-email">{x.email}</small></span></div></td><td className="muted-cell">{x.role}</td><td><strong>{x.sales?money(x.sales):'—'}</strong></td><td><span className="status-pill completed"><i/>Active</span></td><td className="action-cell"><button className="more-button small-more" aria-label={`Options for ${x.name}`} onClick={()=>setOpen(open===x.id?null:x.id)}><MoreHorizontal size={18}/></button>{open===x.id&&<div className="row-menu"><button onClick={()=>{navigator.clipboard?.writeText(x.email);notify('Email address copied.');setOpen(null)}}><ClipboardList size={14}/> Copy email</button><button className="delete-action" onClick={()=>{deleteRep(x);setOpen(null)}}><X size={14}/> Remove member</button></div>}</td></tr>)}</tbody></table></div></section></>}
 
